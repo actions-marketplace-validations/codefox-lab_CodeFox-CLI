@@ -41,9 +41,9 @@ Controls the creativity level of the model.
 
 Recommendations:
 
-* `0.0 – 0.2` → deterministic and stable analysis ✅
-* `0.3 – 0.7` → more “conversational” suggestions
-* `> 0.7` → ❌ not recommended for code review
+* `0.0 – 0.2` -> deterministic and stable analysis ✅
+* `0.3 – 0.7` -> more “conversational” suggestions
+* `> 0.7` -> ❌ not recommended for code review
 
 ---
 
@@ -54,8 +54,8 @@ Recommendations:
 
 Limits the maximum size of the model’s response.
 
-* `null` → the model’s default limit is used
-* number → hard limit
+* `null` -> the model’s default limit is used
+* number -> hard limit
 
 Example:
 
@@ -134,8 +134,8 @@ If `false`:
 
 Analysis mode:
 
-* `true` → only the `git diff` is analyzed
-* `false` → all files in scope are analyzed
+* `true` -> only the `git diff` is analyzed
+* `false` -> all files in scope are analyzed
 
 Recommended for CI and PRs.
 

@@ -7,9 +7,10 @@ from rich.prompt import Confirm, Prompt
 
 from codefox.api.base_api import BaseAPI
 from codefox.api.model_enum import ModelEnum
+from codefox.base_cli import BaseCLI
 
 
-class Init:
+class Init(BaseCLI):
     def __init__(self, model_enum: ModelEnum | None = None):
         self.model_enum = model_enum or self._ask_model()
         self.api_class: type[BaseAPI] = self.model_enum.api_class

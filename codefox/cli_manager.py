@@ -5,6 +5,7 @@ from rich import print
 
 from codefox.api.model_enum import ModelEnum
 from codefox.init import Init
+from codefox.list import List
 from codefox.scan import Scan
 from codefox.utils.helper import Helper
 
@@ -31,7 +32,13 @@ class CLIManager:
 
     def run(self):
         if self.command == "version":
-            print("[green]CodeFox CLI version Alpha 0.2v[/green]")
+            print("[green]CodeFox CLI version Alpha 0.3v[/green]")
+            return
+
+        if self.command == "list":
+            api_class = self._get_api_class()
+            list_model = List(api_class)
+            list_model.execute()
             return
 
         if self.command == "scan":

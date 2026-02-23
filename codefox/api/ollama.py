@@ -35,17 +35,21 @@ class Ollama(BaseAPI):
 
         self.rag = None
 
-        self.client = Client(host=self.base_url, headers=headers)
+        self.client = Client(
+            host=self.base_url,
+            headers=headers,
+            timeout=self.model_config.get("timeout", 600),
+        )
 
     def check_model(self, name: str) -> bool:
         return name in self.get_tag_models()
 
-    def check_connection(self):
+    def check_connection(self) -> tuple[bool, Any]:
         try:
             self.client.show(self.default_model_name)
-            return True
-        except Exception:
-            return False
+            return True, None
+        except Exception as e:
+            return False, e
 
     def upload_files(self, path_files: str) -> tuple[bool, Any]:
         if self.review_config["diff_only"]:
@@ -78,7 +82,7 @@ class Ollama(BaseAPI):
         - describe architecture
         - summarize classes
 
-        If you do not compare OLD vs NEW behavior → the answer is INVALID.
+        If you do not compare OLD vs NEW behavior -> the answer is INVALID.
 
         ──────── DIFF ────────
         GIT DIFF WITH +/- MARKERS. ONLY THESE LINES CHANGED.
@@ -95,14 +99,20 @@ class Ollama(BaseAPI):
 
         1. List the changed lines
         2. For each change:
-        OLD behavior →
-        NEW behavior →
+        OLD behavior ->
+        NEW behavior ->
         3. What execution path now behaves differently?
         4. What can break?
 
-        If there is no behavioral change → explicitly say:
+        If there is no behavioral change -> explicitly say:
         NO BEHAVIORAL CHANGE.
         """
+
+        options = {}
+        if self.model_config.get("temperature") is not None:
+            options["temperature"] = self.model_config["temperature"]
+        if self.model_config.get("max_tokens") is not None:
+            options["num_predict"] = self.model_config["max_tokens"]
 
         chat_response: ChatResponse = self.client.chat(
             model=self.model_config["name"],
@@ -110,9 +120,10 @@ class Ollama(BaseAPI):
                 {"role": "system", "content": system_prompt.get()},
                 {"role": "user", "content": content},
             ],
+            options=options if options else None,
         )
 
-        response = Response(chat_response.message.content)
+        response = Response(chat_response.message.content or "")
         return response
 
     def get_tag_models(self) -> list[str]:

@@ -4,12 +4,12 @@ from typing import cast
 from codefox.api.base_api import BaseAPI
 from codefox.api.gemini import Gemini
 from codefox.api.ollama import Ollama
-from codefox.api.qwen import Qwen
+from codefox.api.openrouter import OpenRouter
 
 
 class ModelEnum(enum.Enum):
     GEMINI = Gemini
-    QWEN = Qwen
+    OPENROUTER = OpenRouter
     OLLAMA = Ollama
 
     @property

@@ -32,12 +32,12 @@ class Gemini(BaseAPI):
     def check_model(self, name: str) -> bool:
         return name in self.get_tag_models()
 
-    def check_connection(self) -> bool:
+    def check_connection(self) -> tuple[bool, Any]:
         try:
             self.client.models.list()
-            return True
-        except Exception:
-            return False
+            return True, None
+        except Exception as e:
+            return False, e
 
     def get_tag_models(self) -> list[str]:
         response = self.client.models.list()

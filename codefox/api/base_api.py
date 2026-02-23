@@ -44,7 +44,7 @@ class BaseAPI(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def check_connection(self) -> bool:
+    def check_connection(self) -> tuple[bool, Any]:
         pass
 
     @abc.abstractmethod
@@ -96,7 +96,17 @@ class BaseAPI(abc.ABC):
         ):
             model_config["temperature"] = 0.2
 
-        if "timeout" not in model_config or not model_config.get("timeout"):
+        if model_config["temperature"] > 1 or model_config["temperature"] < 0:
+            raise ValueError(
+                "Temperature must be between 0 and 1, "
+                "got {model_config['temperature']}"
+            )
+
+        timeout = model_config.get("timeout")
+        if timeout is None:
             model_config["timeout"] = 600
+            timeout = 600
+        if not isinstance(timeout, (int, float)) or timeout <= 0:
+            raise ValueError(f"Timeout must be positive number, got {timeout}")
 
         return model_config

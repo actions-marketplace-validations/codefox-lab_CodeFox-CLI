@@ -1,6 +1,7 @@
 import os
 
 from rich import print
+from rich.errors import MarkupError
 from rich.markup import escape
 
 from codefox.api.base_api import BaseAPI
@@ -11,7 +12,7 @@ class Scan:
     def __init__(self, model: type[BaseAPI]):
         self.model = model()
 
-    def execute(self):
+    def execute(self) -> None:
         diff_text = Helper.get_diff()
         if not diff_text:
             print(
@@ -19,8 +20,9 @@ class Scan:
             )
             return
 
-        if not self.model.check_connection():
-            print("[red]Failed to connect to model[/red]")
+        is_connect, error = self.model.check_connection()
+        if not is_connect:
+            print(f"[red]Failed to connect to mode: {error}[/red]")
             return
 
         name = self.model.model_config["name"]
@@ -49,8 +51,16 @@ class Scan:
 
         print("[yellow]Waiting for model response...[/yellow]")
         try:
-            response = self.model.execute(diff_text)
-            print(f"[green]Scan result from model:[/green]\n{response.text}")
+            try:
+                response = self.model.execute(diff_text)
+                print(
+                    f"[green]Scan result from model:[/green]\n{response.text}"
+                )
+            except MarkupError:
+                print(
+                    "[green]Scan result from model:[/green]\n"
+                    + escape(response.text)
+                )
         except Exception as e:
             err_str = str(e)
             print("[red]Failed scan: " + escape(err_str) + "[/red]")

@@ -10,7 +10,7 @@ from codefox.prompts.prompt_template import PromptTemplate
 from codefox.utils.helper import Helper
 
 
-class Qwen(BaseAPI):
+class OpenRouter(BaseAPI):
     default_model_name = "qwen/qwen3-vl-30b-a3b-thinking"
     default_embedding = "text-embedding-3-small"
     base_url = "https://openrouter.ai/api/v1"
@@ -28,21 +28,18 @@ class Qwen(BaseAPI):
         ):
             self.model_config["embedding"] = self.default_embedding
 
-        if "qwen" not in self.model_config["name"]:
-            raise ValueError("This API key is not compatible with Qwen models")
-
         self.files: list[dict[str, Any]] | None = None
         self.index: list[dict[str, Any]] = []
         self.client = OpenAI(
             api_key=os.getenv("CODEFOX_API_KEY"), base_url=self.base_url
         )
 
-    def check_connection(self) -> bool:
+    def check_connection(self) -> tuple[bool, Any]:
         try:
             self.client.models.list()
-            return True
-        except Exception:
-            return False
+            return True, None
+        except Exception as e:
+            return False, e
 
     def check_model(self, name: str) -> bool:
         return name in self.get_tag_models()
@@ -64,7 +61,7 @@ class Qwen(BaseAPI):
         completion = self.client.chat.completions.create(
             model=self.model_config["name"],
             temperature=self.model_config["temperature"],
-            timeout=self.model_config["timeout"],
+            timeout=self.model_config.get("timeout", 600),
             max_tokens=self.model_config["max_tokens"],
             max_completion_tokens=self.model_config["max_completion_tokens"],
             messages=[
@@ -97,7 +94,7 @@ class Qwen(BaseAPI):
             if not any(ignored in f for ignored in ignored_paths)
         ]
 
-        files = []
+        files: list[dict[str, Any]] = []
         for file in track(valid_files, description="Progress read files..."):
             try:
                 with open(file, encoding="utf-8", errors="ignore") as f:
@@ -107,26 +104,31 @@ class Qwen(BaseAPI):
             except Exception:
                 continue
 
-        self.index = []
-        for file in track(files, description="Progress files processing..."):
-            chunks = self._chunk_text(file["content"])
+        try:
+            self.index = []
+            for file_entry in track(
+                files, description="Progress files processing..."
+            ):
+                chunks = self._chunk_text(file_entry["content"])
 
-            if not chunks:
-                continue
+                if not chunks:
+                    continue
 
-            embeddings = self._embed(chunks)
+                embeddings = self._embed(chunks)
 
-            for chunk, emb in zip(chunks, embeddings):
-                self.index.append(
-                    {
-                        "path": file["path"],
-                        "text": chunk,
-                        "embedding": emb,
-                    }
-                )
+                for chunk, emb in zip(chunks, embeddings):
+                    self.index.append(
+                        {
+                            "path": file_entry["path"],
+                            "text": chunk,
+                            "embedding": emb,
+                        }
+                    )
 
-        self.files = files
-        return True, None
+            self.files = files
+            return True, None
+        except Exception as e:
+            return False, e
 
     def get_tag_models(self) -> list:
         models = self.client.models.list()

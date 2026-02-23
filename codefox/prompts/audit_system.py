@@ -72,7 +72,7 @@ Every issue MUST include at least one:
 - Concrete incorrect state transition
 - Data-flow proof of vulnerability
 
-If evidence cannot be produced → DO NOT report the issue.
+If evidence cannot be produced -> DO NOT report the issue.
 """
 
 SYSTEM_DIFF_AWARE_RULES = """
@@ -119,7 +119,7 @@ Use file_search ONLY when required to:
 - Validate transaction boundaries
 - Verify auth / permission logic
 
-If critical code is missing → request it.
+If critical code is missing -> request it.
 """
 
 SYSTEM_CONTEXT_SUFFICIENCY_POLICY = """
@@ -264,18 +264,18 @@ Explain in 1–2 sentences what the change tries to do.
 
 STEP 2 — BEHAVIOR CHANGE
 For each modified block:
-OLD behavior →
-NEW behavior →
+OLD behavior ->
+NEW behavior ->
 
 STEP 3 — DATA FLOW
 Trace:
-input → transformation → side effects → output
+input -> transformation -> side effects -> output
 
 STEP 4 — STATE TRANSITIONS
 What state was possible before?
 What state is possible now?
 
-ONLY AFTER THESE STEPS → produce findings.
+ONLY AFTER THESE STEPS -> produce findings.
 """
 
 SYSTEM_ANTI_HALLUCINATION = """
@@ -318,23 +318,23 @@ Regression exists ONLY if:
 You can show:
 
 OLD:
-valid input → valid result
+valid input -> valid result
 
 NEW:
-same input → invalid result
+same input -> invalid result
 
-If this cannot be demonstrated → DO NOT report regression.
+If this cannot be demonstrated -> DO NOT report regression.
 """
 
 SYSTEM_BUSINESS_LOGIC_EXECUTION = """
 ──────────────── BUSINESS LOGIC = STATE MACHINE ────────────────
 Convert logic to:
 
-STATE A → ACTION → STATE B
+STATE A -> ACTION -> STATE B
 
-If NEW code allows a transition that was previously impossible → report.
+If NEW code allows a transition that was previously impossible -> report.
 
-If a valid transition is now blocked → report.
+If a valid transition is now blocked -> report.
 """
 
 SYSTEM_SELF_CHECK = """
@@ -347,7 +347,7 @@ Before writing the final report verify:
 4. No baseline issue is reported
 5. All required sections are present
 
-If any rule is violated → fix the response before sending.
+If any rule is violated -> fix the response before sending.
 """
 
 SYSTEM_OUTPUT_GUARD = """

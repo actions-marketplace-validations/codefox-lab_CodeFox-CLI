@@ -22,10 +22,10 @@ def test_get_api_class_uses_provider_from_config(
     mock_load_dotenv: object,
 ) -> None:
     with patch("codefox.cli_manager.Helper") as mock_helper:
-        mock_helper.read_yml.return_value = {"provider": "qwen"}
+        mock_helper.read_yml.return_value = {"provider": "openrouter"}
         manager = CLIManager(command="scan")
         api_class = manager._get_api_class()
-        assert api_class is ModelEnum.QWEN.api_class
+        assert api_class is ModelEnum.OPENROUTER.api_class
 
 
 @patch("codefox.cli_manager.load_dotenv", return_value=True)
