@@ -14,14 +14,6 @@
   <a href="https://github.com/URLbug/CodeFox-CLI/blob/main/WIKI.md"><img src="https://img.shields.io/badge/docs-WIKI-blue?logo=readme" alt="Wiki" /></a>
 </p>
 
----
-
-## 📚 Documentation
-
-**Full configuration reference and examples:** [**WIKI.md**](https://github.com/URLbug/CodeFox-CLI/blob/main/WIKI.md) - provider settings, model options, review rules, prompts, and more.
-
----
-
 ## 🦊 Overview
 
 **CodeFox-CLI** is an intelligent automated code review system that takes over routine security and code quality checks, allowing senior developers to focus on architecture and complex tasks.
@@ -140,6 +132,12 @@ prompt:
 
 **Token configuration:** `./codefoxenv`
 Stores the API token for the model. This file is used by the CLI for authentication and should not be committed to version control.
+
+---
+
+## 📚 Documentation
+
+**Full configuration reference and examples:** [**WIKI.md**](https://github.com/URLbug/CodeFox-CLI/blob/main/WIKI.md) - provider settings, model options, review rules, prompts, and more.
 
 ---
 
