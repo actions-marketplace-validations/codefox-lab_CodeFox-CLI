@@ -7,7 +7,7 @@ README = (HERE / "README.txt").read_text(encoding="utf-8") if (HERE / "README.tx
 
 setup(
 	name="codefox",
-	version="0.3.0",
+	version="0.3.1",
 	description="CodeFox CLI - code auditing and code review tool",
 	long_description=README,
 	long_description_content_type="text/plain",
@@ -15,11 +15,17 @@ setup(
 	packages=find_packages(),
 	include_package_data=True,
 	install_requires=[
-		"typer",
-		"rich",
-		"python-dotenv",
-		"GitPython",
-		"google-genai",
+		"faiss-cpu>=1.7.4",
+		"fastembed>=0.3.0",
+		"gitpython==3.1.46",
+		"google-genai==1.63.0",
+		"numpy>=1.24.0",
+		"python-dotenv==1.2.1",
+		"pyyaml==6.0.3",
+		"rich==14.3.2",
+		"typer==0.23.1",
+		"openai==2.21.0",
+		"ollama==0.6.1",
 	],
 	entry_points={
 		"console_scripts": [
