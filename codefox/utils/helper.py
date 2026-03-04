@@ -1,13 +1,13 @@
 import os
 import re
-import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-from tree_sitter_language_pack import get_parser
-from nltk.tokenize import sent_tokenize
+from typing import TYPE_CHECKING, Any, cast
 
 import git
 import yaml
+from nltk.tokenize import sent_tokenize
+from tree_sitter_language_pack import get_parser
+from tree_sitter import Parser
 
 if TYPE_CHECKING:
     import codefox.utils.local_rag as local_rag
@@ -171,7 +171,7 @@ class Helper:
         return "\n\n".join(parts)
 
     @staticmethod
-    def get_ts_parser_by_extension(ext: str):
+    def get_ts_parser_by_extension(ext: str) -> Parser | None:
         mapping = {
             ".py": "python",
             ".js": "javascript",
@@ -185,19 +185,16 @@ class Helper:
             ".rb": "ruby",
             ".php": "php",
             ".swift": "swift",
-            ".kt": "kotlin",
         }
 
         lang = mapping.get(ext)
         if not lang:
             return None
-        
-        print(get_parser(lang))
 
-        return get_parser(lang)
+        return get_parser(cast(Any, lang))
 
     @staticmethod
-    def chunk_code_with_ts(parser, content: str):
+    def chunk_code_with_ts(parser, content: str) -> list[str]:
         tree = parser.parse(bytes(content, "utf8"))
         root = tree.root_node
 
@@ -205,7 +202,7 @@ class Helper:
 
         def walk(node):
             if node.type in Helper.CODE_CHUNK_TYPES:
-                chunk = content[node.start_byte:node.end_byte]
+                chunk = content[node.start_byte : node.end_byte]
                 chunks.append(chunk)
                 return
 
@@ -214,9 +211,9 @@ class Helper:
 
         walk(root)
         return chunks
-    
+
     @staticmethod
-    def chunk_text_sentences(text, chunk_size, overlap):
+    def chunk_text_sentences(text, chunk_size, overlap) -> list[str]:
         sentences = sent_tokenize(text)
         chunks = []
         current = []
@@ -238,9 +235,9 @@ class Helper:
             chunks.append(" ".join(current))
 
         return chunks
-    
+
     @staticmethod
-    def smart_chunk(path: Path, content: str, chunk_size, overlap):
+    def smart_chunk(path: Path, content: str, chunk_size, overlap) -> list:
         ext = path.suffix.lower()
 
         parser = Helper.get_ts_parser_by_extension(ext)

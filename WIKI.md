@@ -134,12 +134,11 @@ model:
 ### `model.embedding`
 
 **Type:** `string | null`  
-**Relevant for:** `ollama`, `openrouter`
+**Relevant for:** `gemini`, `ollama`, `openrouter`
 
-Model used for embeddings (RAG context search). Required for “upload files” / diff context when using Ollama or OpenRouter.
+Model used for embeddings (RAG context search). Required when using RAG (when `review.diff_only` is `false`).
 
-* **Ollama:** default `BAAI/bge-small-en-v1.5`. Use a model supported by your Ollama server.
-* **OpenRouter:** default `text-embedding-3-small`. Use any OpenRouter embedding model ID.
+**Gemini:**, **Ollama:**, **OpenRouter:** default `BAAI/bge-small-en-v1.5` (via fastembed).
 
 Example:
 
@@ -147,7 +146,54 @@ Example:
 provider: openrouter
 model:
   name: openai/gpt-4o
-  embedding: text-embedding-3-small
+  embedding: BAAI/bge-small-en
+```
+
+---
+
+### Embedding and RAG Fine-Tuning
+
+The parameters in the `model` section control the loading of the embedding model, splitting code into chunks, building the index, and the volume of context passed to the LLM. All parameters are optional.
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `model.embedding` | `string` | `null` | see above | Identifier for the embedding model (fastembed). |
+| `model.max_rag_chars` | `number` | `4096` | Maximum number of RAG context characters injected into the prompt. Increasing this provides more code in the context, but increases token consumption. |
+| `model.max_diff_chars` | `number` | `500000` | Diff size truncation: if the diff is larger than this value, it is truncated and a truncation notice is appended at the end. |
+| `model.rag_max_query_chars` | `number` | `2000` | Maximum length of the query to RAG (when searching for relevant chunks). An overly long query is truncated. |
+| `model.rag_chunk_size` | `number` | `1000` | Chunk size in characters when splitting files. Code is split by function/class boundaries (tree-sitter) or by sentences. |
+| `model.rag_chunk_overlap` | `number` | `200` | Overlap between adjacent chunks (in characters). Must be strictly less than `rag_chunk_size`. |
+| `model.rag_embed_batch_size` | `number` | `64` | Batch size when computing embeddings. A higher value speeds up indexing if there is sufficient RAM. |
+| `model.rag_threads_embedding` | `number` | `null` | `null` | Number of threads for the embedding model. `null` means auto (all CPU cores). |
+| `model.rag_lazy_load` | `boolean` | `false` | Lazy loading of model weights: saves memory upon the first RAG request. |
+| `model.rag_index_dir` | `string` | `.codefox/rag_index/` | Directory where the FAISS index, chunks, and metadata are stored. Changing the directory creates a separate index. |
+| `model.rag_max_chunks` | `number` | `null` | Limit on the number of chunks when building the index. Useful for quick tests or limiting the index size. |
+| `model.rag_max_files` | `number` | `null` | Limit on the number of files used to build the index. |
+| `model.rag_min_score` | `number` | `null` | Minimum RRF score threshold during hybrid search (FAISS + BM25). Chunks with a lower score are filtered out. |
+
+**Recommendations:**
+
+* **For large repositories:** Decrease `rag_chunk_size` (e.g., 600-800) or set `rag_max_files` / `rag_max_chunks` to speed up indexing and reduce memory usage.
+* **For more precise context:** Increase `max_rag_chars` (e.g., 6000–8000) if the model supports a long context window.
+* **When memory is tight:** Enable `rag_lazy_load: true` or decrease `rag_embed_batch_size`.
+
+Example configuration with RAG fine-tuning:
+
+```yaml
+provider: gemini
+model:
+  name: gemini-2.0-flash
+  embedding: BAAI/bge-small-en-v1.5
+  max_rag_chars: 6000
+  max_diff_chars: 300000
+  rag_chunk_size: 800
+  rag_chunk_overlap: 150
+  rag_embed_batch_size: 32
+  rag_index_dir: .codefox/rag_index/
+  rag_max_files: 500
+review:
+  diff_only: false
+
 ```
 
 ---

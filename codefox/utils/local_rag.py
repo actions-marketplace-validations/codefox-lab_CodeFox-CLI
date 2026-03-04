@@ -138,7 +138,9 @@ class LocalRAG:
 
                 files_read += 1
 
-                chunks = Helper.smart_chunk(path, content, chunk_size, chunk_overlap)
+                chunks = Helper.smart_chunk(
+                    path, content, chunk_size, chunk_overlap
+                )
 
                 for chunk_text in chunks:
                     texts.append(chunk_text)
@@ -160,7 +162,6 @@ class LocalRAG:
             corpus_tokens = bm25s.tokenize(
                 texts, stopwords=self.kwargs["language"]
             )
-            print(corpus_tokens)
             self.retriever.index(corpus_tokens)
         self.console.print("[green]✓[/green] BM25 lexical index built.")
 
