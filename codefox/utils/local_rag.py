@@ -3,6 +3,7 @@ from pathlib import Path
 
 import bm25s
 import faiss
+import nltk
 import numpy as np
 from fastembed import TextEmbedding
 from rich.console import Console
@@ -23,6 +24,8 @@ class LocalRAG:
     def __init__(self, embedding: str, files_path: str, **kwargs):
         self.console = Console()
         self.console.print("[bold cyan]Initializing LocalRAG...[/bold cyan]")
+
+        nltk.download("punkt")
 
         self.all_files = Helper.get_all_files(files_path)
         self.kwargs = self._get_kwargs(**kwargs)
@@ -134,12 +137,13 @@ class LocalRAG:
                     continue
 
                 files_read += 1
-                for i in range(0, len(content), step):
-                    if max_chunks is not None and len(texts) >= max_chunks:
-                        break
-                    chunk_text = content[i : i + chunk_size]
+
+                chunks = Helper.smart_chunk(path, content, chunk_size, chunk_overlap)
+
+                for chunk_text in chunks:
                     texts.append(chunk_text)
                     self.files.append({"path": file, "text": chunk_text})
+
                 if max_chunks is not None and len(texts) >= max_chunks:
                     break
             except Exception:
@@ -156,6 +160,7 @@ class LocalRAG:
             corpus_tokens = bm25s.tokenize(
                 texts, stopwords=self.kwargs["language"]
             )
+            print(corpus_tokens)
             self.retriever.index(corpus_tokens)
         self.console.print("[green]✓[/green] BM25 lexical index built.")
 
@@ -181,7 +186,7 @@ class LocalRAG:
         ):
             vectors_np = np.array(vectors).astype("float32")
             dim = vectors_np.shape[1]
-            index = faiss.IndexFlatL2(dim)
+            index = faiss.IndexHNSWFlat(dim, 32)
             index.add(vectors_np)
             self.index = index
 

@@ -1,7 +1,10 @@
 import os
 import re
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from tree_sitter_languages import get_parser
+from nltk.tokenize import sent_tokenize
 
 import git
 import yaml
@@ -23,6 +26,14 @@ class Helper:
         ".php",
         ".ts",
         ".swift",
+    }
+
+    CODE_CHUNK_TYPES = {
+        "function_definition",
+        "class_definition",
+        "method_definition",
+        "function_declaration",
+        "class_declaration",
     }
 
     @staticmethod
@@ -158,3 +169,85 @@ class Helper:
             parts.append(block)
 
         return "\n\n".join(parts)
+
+    @staticmethod
+    def get_ts_parser_by_extension(ext: str):
+        mapping = {
+            ".py": "python",
+            ".js": "javascript",
+            ".ts": "typescript",
+            ".java": "java",
+            ".go": "go",
+            ".rs": "rust",
+            ".cpp": "cpp",
+            ".c": "c",
+            ".cs": "c_sharp",
+            ".rb": "ruby",
+            ".php": "php",
+            ".swift": "swift",
+            ".kt": "kotlin",
+        }
+
+        lang = mapping.get(ext)
+        if not lang:
+            return None
+        
+        print(get_parser(lang))
+
+        return get_parser(lang)
+
+    @staticmethod
+    def chunk_code_with_ts(parser, content: str):
+        tree = parser.parse(bytes(content, "utf8"))
+        root = tree.root_node
+
+        chunks = []
+
+        def walk(node):
+            if node.type in Helper.CODE_CHUNK_TYPES:
+                chunk = content[node.start_byte:node.end_byte]
+                chunks.append(chunk)
+                return
+
+            for child in node.children:
+                walk(child)
+
+        walk(root)
+        return chunks
+    
+    @staticmethod
+    def chunk_text_sentences(text, chunk_size, overlap):
+        sentences = sent_tokenize(text)
+        chunks = []
+        current = []
+
+        current_len = 0
+
+        for sent in sentences:
+            current.append(sent)
+            current_len += len(sent)
+
+            if current_len >= chunk_size:
+                chunks.append(" ".join(current))
+
+                overlap_text = " ".join(current)[-overlap:]
+                current = [overlap_text]
+                current_len = len(overlap_text)
+
+        if current:
+            chunks.append(" ".join(current))
+
+        return chunks
+    
+    @staticmethod
+    def smart_chunk(path: Path, content: str, chunk_size, overlap):
+        ext = path.suffix.lower()
+
+        parser = Helper.get_ts_parser_by_extension(ext)
+
+        if parser:
+            chunks = Helper.chunk_code_with_ts(parser, content)
+            if chunks:
+                return chunks
+
+        return Helper.chunk_text_sentences(content, chunk_size, overlap)
