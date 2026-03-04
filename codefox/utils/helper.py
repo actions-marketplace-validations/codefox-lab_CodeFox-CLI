@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any, cast
 import git
 import yaml
 from nltk.tokenize import sent_tokenize
-from tree_sitter_language_pack import get_parser
 from tree_sitter import Parser
+from tree_sitter_language_pack import get_parser
 
 if TYPE_CHECKING:
     import codefox.utils.local_rag as local_rag
