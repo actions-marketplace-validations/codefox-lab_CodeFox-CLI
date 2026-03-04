@@ -7,7 +7,7 @@ README = (HERE / "README.txt").read_text(encoding="utf-8") if (HERE / "README.tx
 
 setup(
 	name="codefox",
-	version="0.3.2",
+	version="0.3.5",
 	description="CodeFox CLI - code auditing and code review tool",
 	long_description=README,
 	long_description_content_type="text/plain",
@@ -26,6 +26,7 @@ setup(
 		"typer==0.23.1",
 		"openai==2.21.0",
 		"ollama==0.6.1",
+        "bm25s==0.3.0",
 	],
 	entry_points={
 		"console_scripts": [

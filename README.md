@@ -68,11 +68,11 @@ uv tool install codefox
 
 ✅ Verify installation
 ```bash
-codefox --command version
+codefox version
 ```
 Or
 ```bash
-python3 -m codefox --command version
+python3 -m codefox version
 ```
 
 ## 🚀 Quick Start
@@ -80,19 +80,19 @@ python3 -m codefox --command version
 ### Initialize (stores your API key)
 
 ```bash
-codefox --command init
+codefox init
 ```
 
 ### Run a scan (uses the current git diff)
 
 ```bash
-codefox --command scan
+codefox scan
 ```
 
 ### Show version
 
 ```bash
-codefox --command version
+codefox version
 ```
 
 ---
@@ -111,7 +111,7 @@ Example config used in the demo above (Ollama + qwen3-coder):
 ```yaml
 provider: ollama
 model:
-  name: qwen3-coder:480b
+  name: qwen3-coder:30b
   temperature: 0.5
   max_tokens: 4000
 review:
@@ -158,13 +158,13 @@ Stores the API token for the model. This file is used by the CLI for authenticat
 ### List available models (for the provider in `.codefox.yml`)
 
 ```bash
-codefox --command list
+codefox list
 ```
 
 ### Run a scan in a project
 
 ```bash
-codefox --command scan
+codefox scan
 ```
 
 ---

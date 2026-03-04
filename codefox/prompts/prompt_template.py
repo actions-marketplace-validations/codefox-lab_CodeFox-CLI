@@ -1,14 +1,43 @@
 from typing import Any, cast
 
+import codefox.prompts.audit_content as audit_content
 import codefox.prompts.audit_system as audit_system
 from codefox.prompts.template import Template
 
 
 class PromptTemplate(Template):
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(
+        self, config: dict[str, Any], type_prompt: str = "system"
+    ) -> None:
         self.config = config
+        self.type_prompt = type_prompt
 
     def get(self) -> str:
+        if self.type_prompt == "system":
+            return self._get_system()
+        elif self.type_prompt == "content":
+            return self._get_content()
+
+        return ""
+
+    def _get_content(self) -> str:
+        parts: list[str] = []
+        parts.append(
+            audit_content.CONTENT_FULL.format(
+                diff_text=self.config.get("diff_text", "")
+            )
+        )
+
+        if "files_context" in self.config:
+            parts.append(
+                audit_content.CONTENT_RELEVANT_CONTEXT.format(
+                    files_context=self.config["files_context"]
+                )
+            )
+
+        return "\n".join(p.strip() for p in parts if p).strip()
+
+    def _get_system(self) -> str:
         ruler = self._get_config("ruler")
         review = self._get_config("review")
         prompt_cfg = self._get_config("prompt")
@@ -16,6 +45,7 @@ class PromptTemplate(Template):
 
         hard_mode = prompt_cfg.get("hard_mode", False)
         short_mode = prompt_cfg.get("short_mode", False)
+        strict_facts = prompt_cfg.get("strict_facts", False)
 
         parts: list[str] = []
 
@@ -23,6 +53,8 @@ class PromptTemplate(Template):
             parts.append(prompt_cfg["system"])
 
         else:
+            if strict_facts:
+                parts.append(audit_system.SYSTEM_STRICT_FACTS)
             if hard_mode:
                 parts.append(audit_system.SYSTEM_HARD_MODE)
                 parts.append(audit_system.SYSTEM_ANTI_HALLUCINATION)
@@ -73,22 +105,22 @@ class PromptTemplate(Template):
             parts.append(audit_system.SYSTEM_BASELINE_MODE)
 
         parts.append(f"""
-──────── REVIEW POLICY ────────
-Minimum severity: {review.get("severity")}
-Max findings: {review.get("max_issues")}
-Auto-fix: {review.get("suggest_fixes")}
-Diff-only mode: {review.get("diff_only")}
+## REVIEW POLICY
+- **Minimum severity:** {review.get("severity")}
+- **Max findings:** {review.get("max_issues")}
+- **Auto-fix:** {review.get("suggest_fixes")}
+- **Diff-only mode:** {review.get("diff_only")}
 """)
 
         severity = review.get("severity")
         if severity:
             parts.append(f"""
-Report only issues with severity >= {(severity or "").upper()}
+Report only issues with **severity >= {(severity or "").upper()}**
 """)
 
         if review.get("max_issues"):
             parts.append(f"""
-Limit the output to the {review.get("max_issues")} most critical findings.
+Limit the output to the **{review.get("max_issues")}** most critical findings.
 """)
 
         if prompt_cfg.get("extra"):

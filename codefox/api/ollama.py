@@ -2,17 +2,31 @@ import os
 from typing import Any
 
 import requests
-from ollama import ChatResponse, Client
+from ollama import ChatResponse, Client, pull
+from rich import print
+from rich.progress import (
+    BarColumn,
+    DownloadColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeRemainingColumn,
+    TransferSpeedColumn,
+)
+from rich.prompt import Confirm
 
 from codefox.api.base_api import BaseAPI, ExecuteResponse, Response
 from codefox.prompts.prompt_template import PromptTemplate
+from codefox.utils.helper import Helper
 from codefox.utils.local_rag import LocalRAG
 
 
 class Ollama(BaseAPI):
     default_model_name = "gemma3:12b"
     default_embedding = "BAAI/bge-small-en-v1.5"
-    base_url = "https://ollama.com"
+    base_url = "http://localhost:11434"
+    default_max_rag_chars = 4096
+    default_max_diff_chars = 16_000
 
     def __init__(self, config=None):
         super().__init__(config)
@@ -42,7 +56,10 @@ class Ollama(BaseAPI):
         )
 
     def check_model(self, name: str) -> bool:
-        return name in self.get_tag_models()
+        if name not in self.get_tag_models():
+            return self._pull_model(name)
+
+        return True
 
     def check_connection(self) -> tuple[bool, Any]:
         try:
@@ -55,8 +72,32 @@ class Ollama(BaseAPI):
         if self.review_config["diff_only"]:
             return True, None
 
-        self.rag = LocalRAG(self.model_config["embedding"], path_files)
-        self.rag.build()
+        rag_kw = {
+            "max_query_chars": self.model_config.get(
+                "rag_max_query_chars", 2000
+            ),
+        }
+        key_map = {
+            "rag_min_score": "min_score",
+            "rag_chunk_size": "chunk_size",
+            "rag_chunk_overlap": "chunk_overlap",
+            "rag_embed_batch_size": "embed_batch_size",
+            "rag_max_chunks": "max_chunks",
+            "rag_max_files": "max_files",
+            "rag_threads_embedding": "threads_embedding",
+            "rag_lazy_load": "lazy_load",
+            "rag_index_dir": "index_dir",
+        }
+        for config_key, kw_key in key_map.items():
+            if config_key in self.model_config:
+                rag_kw[kw_key] = self.model_config[config_key]
+
+        self.rag = LocalRAG(
+            self.model_config["embedding"], files_path=path_files, **rag_kw
+        )
+        if not self.rag.load_index():
+            self.rag.build()
+            self.rag.save_index()
 
         return True, None
 
@@ -64,49 +105,35 @@ class Ollama(BaseAPI):
         pass
 
     def execute(self, diff_text: str) -> ExecuteResponse:
-        system_prompt = PromptTemplate(self.config)
+        max_rag_chars = (
+            self.model_config.get("max_rag_chars")
+            or self.default_max_rag_chars
+        )
+        max_diff_chars = (
+            self.model_config.get("max_diff_chars")
+            or self.default_max_diff_chars
+        )
+
+        if len(diff_text) > max_diff_chars:
+            diff_text = (
+                diff_text[:max_diff_chars]
+                + "\n\n... [diff truncated for context length]"
+            )
 
         rag_context = ""
         if self.rag:
-            hits = self.rag.search(diff_text, k=5)
-            rag_context = "\n\n".join(hits)
+            rag_context = Helper.get_files_context(
+                self.rag, diff_text, k=12, max_rag_chars=max_rag_chars
+            )
 
-        content = f"""
-        You are performing a DIFF AUDIT.
-
-        Your task:
-        Detect BEHAVIOR CHANGE caused by the modified lines.
-
-        DO NOT:
-        - explain the codebase
-        - describe architecture
-        - summarize classes
-
-        If you do not compare OLD vs NEW behavior -> the answer is INVALID.
-
-        ──────── DIFF ────────
-        GIT DIFF WITH +/- MARKERS. ONLY THESE LINES CHANGED.
-        {diff_text}
-
-        ──────── RELEVANT CONTEXT ────────
-        (USE ONLY IF NEEDED TO TRACE DATA FLOW)
-        Do NOT analyze this section by itself.
-        Use it only to understand symbols referenced in the diff.
-
-        {rag_context}
-
-        ──────── REQUIRED REASONING ────────
-
-        1. List the changed lines
-        2. For each change:
-        OLD behavior ->
-        NEW behavior ->
-        3. What execution path now behaves differently?
-        4. What can break?
-
-        If there is no behavioral change -> explicitly say:
-        NO BEHAVIORAL CHANGE.
-        """
+        system_prompt = PromptTemplate(self.config)
+        context_prompt = PromptTemplate(
+            {
+                "files_context": rag_context,
+                "diff_text": diff_text,
+            },
+            "content",
+        )
 
         options = {}
         if self.model_config.get("temperature") is not None:
@@ -118,7 +145,7 @@ class Ollama(BaseAPI):
             model=self.model_config["name"],
             messages=[
                 {"role": "system", "content": system_prompt.get()},
-                {"role": "user", "content": content},
+                {"role": "user", "content": context_prompt.get()},
             ],
             options=options if options else None,
         )
@@ -136,3 +163,46 @@ class Ollama(BaseAPI):
             ]
         else:
             return []
+
+    def _pull_model(self, model: str) -> bool:
+        if Confirm.ask(
+            "[yellow]Do you wanna download model?[/yellow]", default=True
+        ):
+            try:
+                print(f"Starting download for model: {model}")
+
+                with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[bold blue]{task.description}"),
+                    BarColumn(),
+                    DownloadColumn(),
+                    TransferSpeedColumn(),
+                    TimeRemainingColumn(),
+                ) as progress:
+                    task = progress.add_task(
+                        f"Downloading {model}", total=None
+                    )
+
+                    for event in pull(model, stream=True):
+                        completed = event.get("completed")
+                        total = event.get("total")
+                        status = event.get("status")
+
+                        if total:
+                            progress.update(task, total=total)
+
+                        if completed:
+                            progress.update(task, completed=completed)
+
+                        if status:
+                            progress.update(
+                                task, description=f"[cyan]{status}"
+                            )
+
+                print(f"[green]Model {model} downloaded successfully.[/green]")
+                return True
+            except Exception as e:
+                print(f"[red]Sorry but we cannot download model: {e}[/red]")
+                return False
+
+        return False

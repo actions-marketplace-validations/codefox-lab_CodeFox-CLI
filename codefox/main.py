@@ -5,22 +5,27 @@ from codefox.cli_manager import CLIManager
 
 
 def main(
-    command: str = typer.Option(help="The command to execute."),
-    args: str = typer.Option(None, help="Arguments for the command."),
+    command: str = typer.Argument(
+        ..., help="The command to execute (e.g., scan, init)."
+    ),
+    args: str = typer.Argument(
+        None, help="Additional arguments for the command."
+    ),
 ):
-    """
-    Welcome to CodeFox CLI! This tool allows you to interact with
-    various AI models and perform different tasks.
+    """CodeFox CLI — automated code review with Gemini, Ollama, and OpenRouter.
 
-    To get started, use the following commands:
+    Commands:
 
-    - [bold cyan]init[/bold cyan]: Initializes the CodeFox CLI environment.
+    - [bold cyan]init[/bold cyan]:
+    Set up the environment (provider, API key, .codefoxignore, .codefox.yml).
 
-    - [bold cyan]scan[/bold cyan]: Executes a scan using the Gemini API to
-    generate content based on a prompt.
+    - [bold cyan]scan[/bold cyan]:
+    Run review on the current git diff using the configured model.
 
-    - [bold cyan]version[/bold cyan]:
-    Displays the current version of CodeFox CLI.
+    - [bold cyan]list[/bold cyan]:
+    List available models for the current provider.
+
+    - [bold cyan]version[/bold cyan]: Show CodeFox CLI version.
     """
 
     manager = CLIManager(command=command, args=args)
