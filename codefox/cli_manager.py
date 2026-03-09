@@ -1,4 +1,5 @@
 import importlib.metadata
+from typing import Any
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -8,11 +9,12 @@ from codefox.api.model_enum import ModelEnum
 from codefox.init import Init
 from codefox.list import List
 from codefox.scan import Scan
+from codefox.api.base_api import BaseAPI
 from codefox.utils.helper import Helper
 
 
 class CLIManager:
-    def __init__(self, command, args=None):
+    def __init__(self, command: str, args: dict[str, Any] | None = None):
         self.command = command
         self.args = args
 
@@ -26,12 +28,12 @@ class CLIManager:
                 "Please ensure it exists and is properly formatted."
             )
 
-    def _get_api_class(self):
+    def _get_api_class(self) -> type[BaseAPI]:
         config = Helper.read_yml(".codefox.yml")
         provider = config.get("provider", "gemini")
         return ModelEnum.by_name(provider).api_class
 
-    def run(self):
+    def run(self) -> None:
         if self.command == "version":
             version = importlib.metadata.version("codefox")
             print(f"[green]CodeFox CLI version {version}[/green]")
@@ -45,7 +47,7 @@ class CLIManager:
 
         if self.command == "scan":
             api_class = self._get_api_class()
-            scan = Scan(api_class)
+            scan = Scan(api_class, self.args)
             scan.execute()
             return
 

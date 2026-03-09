@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 from rich import print
 from rich.console import Console
@@ -7,17 +8,30 @@ from rich.markdown import Markdown
 from rich.markup import escape
 from rich.table import Table
 
+from codefox.base_cli import BaseCLI
 from codefox.api.base_api import BaseAPI
 from codefox.utils.helper import Helper
 
 
-class Scan:
-    def __init__(self, model: type[BaseAPI]):
+class Scan(BaseCLI):
+    def __init__(self, model: type[BaseAPI], args: dict[str, Any]):
         self.model = model()
+        self.args = args
+    
+    def _get_branchs(self) -> tuple[str | None, str | None]:
+        source_branch = self.args.get("sourceBranch")
+        target_branch = self.args.get("targetBranch")
+
+        if source_branch and target_branch:
+            return source_branch, target_branch
+        
+        source_branch = self.model.review_config["sourceBranch"]
+        target_branch = self.model.review_config["targetBranch"]
+
+        return source_branch, target_branch
 
     def execute(self) -> None:
-        source_branch = self.model.review_config['sourceBranch']
-        target_branch = self.model.review_config['targetBranch']
+        source_branch, target_branch = self._get_branchs()
 
         diff_text = Helper.get_diff(source_branch, target_branch)
         if not diff_text:
