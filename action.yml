@@ -1,0 +1,50 @@
+name: 'CodeFox AI Review'
+author: 'CodeFox'
+description: '🚀 AI-powered code security and quality audit'
+branding:
+  icon: 'shield'
+  color: 'orange'
+
+inputs:
+  codefox-api-key:
+    description: 'API Key for CodeFox service'
+    required: true
+  github-token:
+    description: 'GitHub Token for posting comments'
+    default: ${{ github.token }}
+    required: false
+  target-branch:
+    description: 'Target branch for diff (base)'
+    default: ${{ github.base_ref }}
+    required: false
+  source-branch:
+    description: 'Source branch for diff (head)'
+    default: ${{ github.head_ref }}
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install CodeFox
+      run: |
+        python -m pip install --upgrade pip
+        pip install git+https://github.com/URLbug/CodeFox-CLI.git@dev_agents
+      shell: bash
+
+    - name: Run CodeFox Scan
+      run: |
+        codefox scan \
+          --targetbranch ${{ inputs.target-branch }} \
+          --sourcebranch ${{ inputs.source-branch }} \
+          --ci true
+      shell: bash
+      env:
+        CODEFOX_API_KEY: ${{ inputs.codefox-api-key }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
