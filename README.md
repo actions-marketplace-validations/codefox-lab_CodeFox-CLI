@@ -18,7 +18,8 @@
 <p align="center">
   📚 <a href="https://github.com/codefox-lab/CodeFox-CLI/wiki">Documentation</a> •
   🚀 <a href="#-quick-start">Quick Start</a> •
-  🐛 <a href="https://github.com/URLbug/CodeFox-CLI/issues">Report Issue</a>
+  🐛 <a href="https://github.com/URLbug/CodeFox-CLI/issues">Report Issue</a> •
+  📝 <a href="https://github.com/codefox-lab/Demo-PR-Action">Demo Pull Request</a>
 </p>
 
 ---
