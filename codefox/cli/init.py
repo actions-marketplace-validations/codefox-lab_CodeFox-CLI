@@ -1,3 +1,4 @@
+from typing import Any
 from pathlib import Path
 
 import yaml
@@ -11,9 +12,16 @@ from codefox.cli.base_cli import BaseCLI
 
 
 class Init(BaseCLI):
-    def __init__(self, model_enum: ModelEnum | None = None):
-        self.model_enum = model_enum or self._ask_model()
+    def __init__(self, args: dict[str, Any] | None = None):
+        if not args.get("provider"):
+            self.model_enum = self._ask_model()
+        else:
+            self.model_enum = ModelEnum.by_name(args["provider"]) 
+        
         self.api_class: type[BaseAPI] = self.model_enum.api_class
+        
+        self.args = args
+        
         self.config_path = Path(".codefoxenv")
         self.ignore_path = Path(".codefoxignore")
         self.yaml_config_path = Path(".codefox.yml")
@@ -28,7 +36,10 @@ class Init(BaseCLI):
         return ModelEnum.by_name(choice)
 
     def execute(self) -> None:
-        api_key = self._ask_api_key() or ""
+        if not self.args.get("token"):
+            api_key = self._ask_api_key() or ""
+        else:
+            api_key = self.args["token"]
 
         if not self._write_config(api_key):
             return

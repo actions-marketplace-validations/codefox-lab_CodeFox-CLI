@@ -11,6 +11,7 @@ from codefox.cli.clean import Clean
 from codefox.cli.init import Init
 from codefox.cli.list import List
 from codefox.cli.scan import Scan
+from codefox.cli.index import Index
 from codefox.utils.helper import Helper
 
 
@@ -34,6 +35,12 @@ class CLIManager:
             version = importlib.metadata.version("codefox")
             print(f"[green]CodeFox CLI version {version}[/green]")
             return
+        
+        if self.command == "index":
+            api_class = self._get_api_class()
+            index = Index(api_class)
+            index.execute()
+            return
 
         if self.command == "list":
             api_class = self._get_api_class()
@@ -54,7 +61,7 @@ class CLIManager:
             return
 
         if self.command == "init":
-            init = Init()
+            init = Init(self.args or {})
             init.execute()
             return
 

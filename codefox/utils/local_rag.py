@@ -191,39 +191,40 @@ class LocalRAG:
         if self.client.collection_exists(self.collection_name):
             self.client.delete_collection(self.collection_name)
 
-        with self.console.status(
+        self.console.print(
             "[magenta]Building Qdrant vector index...[/magenta]"
+        )
+        
+        dim: int | None = None
+        for i in track(
+            range(0, len(texts), batch_size),
+            total=(len(texts) + batch_size - 1) // batch_size,
+            description="[blue]Generating embeddings...[/blue]",
         ):
-            dim: int | None = None
-            for i in track(
-                range(0, len(texts), batch_size),
-                total=(len(texts) + batch_size - 1) // batch_size,
-                description="[blue]Generating embeddings...[/blue]",
-            ):
-                batch = texts[i : i + batch_size]
-                emb = np.array(list(self.model.embed(batch)), dtype="float32")
+            batch = texts[i : i + batch_size]
+            emb = np.array(list(self.model.embed(batch)), dtype="float32")
 
-                if dim is None:
-                    dim = emb.shape[1]
-                    self.client.create_collection(
-                        collection_name=self.collection_name,
-                        vectors_config=VectorParams(
-                            size=dim, distance=Distance.COSINE
-                        ),
-                    )
-
-                points = [
-                    PointStruct(
-                        id=j,
-                        vector=vec.tolist(),
-                        payload={"path": self.files[j]["path"]},
-                    )
-                    for j, vec in enumerate(emb, start=i)
-                ]
-                self.client.upsert(
+            if dim is None:
+                dim = emb.shape[1]
+                self.client.create_collection(
                     collection_name=self.collection_name,
-                    points=points,
+                    vectors_config=VectorParams(
+                        size=dim, distance=Distance.COSINE
+                    ),
                 )
+
+            points = [
+                PointStruct(
+                    id=j,
+                    vector=vec.tolist(),
+                    payload={"path": self.files[j]["path"]},
+                )
+                for j, vec in enumerate(emb, start=i)
+            ]
+            self.client.upsert(
+                collection_name=self.collection_name,
+                points=points,
+            )
 
         self.console.print("[green]✓[/green] Qdrant semantic index built.")
         self.console.print(

@@ -65,7 +65,7 @@ class Helper:
         source_branch: str | None = None, target_branch: str | None = None
     ) -> str | None:
         try:
-            repo = git.Repo(".")
+            repo = git.Repo(".", search_parent_directories=True)
 
             if source_branch and target_branch:
                 diff_text = repo.git.diff(
@@ -75,7 +75,11 @@ class Helper:
                 diff_text = repo.git.diff()
 
             return cast(str | None, diff_text)
-        except git.exc.InvalidGitRepositoryError:
+        except (
+            git.exc.InvalidGitRepositoryError,
+            git.exc.NoSuchPathError,
+            git.exc.GitCommandError,
+        ):
             return None
 
     # ------------------------------------------------------------------
