@@ -50,6 +50,7 @@ setup(
 		"psutil==7.2.2",
 		"PyGithub==2.8.1",
 		"pygments==2.19.2",
+        "python-gitlab==8.1.0",
 	],
 	entry_points={
 		"console_scripts": [
