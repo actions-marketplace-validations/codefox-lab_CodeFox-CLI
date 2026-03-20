@@ -36,10 +36,10 @@ class GitLabBot:
         if not message or not message.strip():
             raise ValueError("Message must not be empty.")
 
-       
         try:
             project = self.gitlab.projects.get(int(self.repository))
             mr = project.mergerequests.get(int(self.mr_iid))
+            print(message, self.mr_iid, self.repository)
             mr.notes.create({"body": message})
         except GitlabGetError as exc:
             raise RuntimeError(
