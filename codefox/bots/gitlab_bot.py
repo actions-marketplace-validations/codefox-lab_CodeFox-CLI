@@ -32,13 +32,8 @@ class GitLabBot:
 
         self.gitlab = Gitlab(
             url=self.gitlab_url,
-            private_token=self.gitlab_token,
+            job_token=self.gitlab_token,
         )
-
-        try:
-            self.gitlab.auth()
-        except GitlabAuthenticationError as exc:
-            raise RuntimeError("Failed to authenticate to GitLab API.") from exc
 
     def send(self, message: str) -> None:
         if not message or not message.strip():
