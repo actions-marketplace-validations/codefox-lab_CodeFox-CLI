@@ -83,8 +83,7 @@ class Scan(BaseCLI):
         response = self.model.execute(diff_text)
         if self.github_bot is not None:
             self.github_bot.send(response.text)
-        
-        print(self.gitlab_bot)
+
         if self.gitlab_bot is not None:
             self.gitlab_bot.send(response.text)
 
