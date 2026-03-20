@@ -194,7 +194,7 @@ class LocalRAG:
         self.console.print(
             "[magenta]Building Qdrant vector index...[/magenta]"
         )
-        
+
         dim: int | None = None
         for i in track(
             range(0, len(texts), batch_size),

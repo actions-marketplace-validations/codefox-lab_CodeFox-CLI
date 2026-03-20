@@ -23,31 +23,33 @@ def scan(
     )
     manager.run()
 
+
 @app.command("index")
 def index():
     """Index files"""
-    CLIManager(
-        command="index", args={}
-    ).run()
+    CLIManager(command="index", args={}).run()
+
 
 @app.command("init")
 def init(
-    provider: str | None = typer.Option(None, help="Provider."), 
-    token: str | None = typer.Option(None, help="Token provider.")
+    provider: str | None = typer.Option(None, help="Provider."),
+    token: str | None = typer.Option(None, help="Token provider."),
 ):
     """Initialize CodeFox."""
     manager = CLIManager(
-        command="init", 
+        command="init",
         args={
             "provider": provider,
             "token": token,
-        }
+        },
     )
     manager.run()
 
 
 @app.command("list")
-def list_models(type_model: str = typer.Argument("models", help="Model type.")):
+def list_models(
+    type_model: str = typer.Argument("models", help="Model type."),
+):
     """List available models."""
     manager = CLIManager(
         command="list",

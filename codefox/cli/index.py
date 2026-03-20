@@ -1,4 +1,5 @@
 import os
+
 from rich import print
 from rich.markup import escape
 
@@ -14,12 +15,8 @@ class Index(BaseCLI):
         is_upload, error = self.model.upload_files(os.getcwd())
         if not is_upload:
             print(
-                "[red]Failed to index files: "
-                + escape(str(error))
-                + "[/red]"
+                "[red]Failed to index files: " + escape(str(error)) + "[/red]"
             )
             return
-        
-        print(
-            "[green]Successful to index files[/green]"
-        )
+
+        print("[green]Successful to index files[/green]")

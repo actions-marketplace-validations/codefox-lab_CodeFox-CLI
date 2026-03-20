@@ -1,8 +1,7 @@
 import os
-from urllib.parse import quote_plus
 
 from gitlab import Gitlab
-from gitlab.exceptions import GitlabGetError, GitlabCreateError
+from gitlab.exceptions import GitlabCreateError, GitlabGetError
 
 
 class GitLabBot:
@@ -36,13 +35,22 @@ class GitLabBot:
         if not message or not message.strip():
             raise ValueError("Message must not be empty.")
 
+        repository = self.repository
+        mr_iid = self.mr_iid
+
+        if repository is None or mr_iid is None:
+            raise RuntimeError(
+                "GitLab project or merge request is not configured."
+            )
+
         try:
-            project = self.gitlab.projects.get(int(self.repository))
-            mr = project.mergerequests.get(int(self.mr_iid))
+            project = self.gitlab.projects.get(int(repository))
+            mr = project.mergerequests.get(int(mr_iid))
             mr.notes.create({"body": message})
         except GitlabGetError as exc:
             raise RuntimeError(
-                f"Failed to find project '{self.repository}' or merge request IID {self.mr_iid}."
+                f"Failed to find project '{repository}' "
+                f"or merge request IID {mr_iid}."
             ) from exc
         except GitlabCreateError as exc:
             raise RuntimeError("Failed to create merge request note.") from exc

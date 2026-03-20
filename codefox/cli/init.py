@@ -1,5 +1,5 @@
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 import yaml
 from dotenv import load_dotenv, set_key
@@ -13,15 +13,17 @@ from codefox.cli.base_cli import BaseCLI
 
 class Init(BaseCLI):
     def __init__(self, args: dict[str, Any] | None = None):
-        if not args.get("provider"):
+        resolved_args = args if args is not None else {}
+
+        if not resolved_args.get("provider"):
             self.model_enum = self._ask_model()
         else:
-            self.model_enum = ModelEnum.by_name(args["provider"]) 
-        
+            self.model_enum = ModelEnum.by_name(resolved_args["provider"])
+
         self.api_class: type[BaseAPI] = self.model_enum.api_class
-        
-        self.args = args
-        
+
+        self.args: dict[str, Any] = resolved_args
+
         self.config_path = Path(".codefoxenv")
         self.ignore_path = Path(".codefoxignore")
         self.yaml_config_path = Path(".codefox.yml")
