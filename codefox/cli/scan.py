@@ -84,6 +84,7 @@ class Scan(BaseCLI):
         if self.github_bot is not None:
             self.github_bot.send(response.text)
         
+        print(self.gitlab_bot)
         if self.gitlab_bot is not None:
             self.gitlab_bot.send(response.text)
 
