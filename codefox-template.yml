@@ -1,25 +1,22 @@
-stages:
-  - review
-
 codefox_review:
   stage: review
   image: python:3.12-slim
 
   variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    CODEFOX_BRANCH: "dev-docs"
 
   cache:
-    key: "codefox-$CI_PROJECT_ID"
+    key: codefox-$CI_PROJECT_ID
     paths:
-      - .codefox/
-      - .cache/pip/
+      - ".codefox/"
+      - ".cache/pip/"
 
   before_script:
     - echo "CODEFOX_BRANCH=[$CODEFOX_BRANCH]"
-    - env | sort | grep '^CODEFOX' || true
     - apt-get update && apt-get install -y --no-install-recommends git curl ca-certificates && rm -rf /var/lib/apt/lists/*
     - python -m pip install --upgrade pip
-    - pip install "git+https://github.com/URLbug/CodeFox-CLI.git@${CODEFOX_BRANCH:-main}"
+    - pip install "git+https://github.com/URLbug/CodeFox-CLI.git@${CODEFOX_BRANCH}"
     - |
       umask 077
       {
