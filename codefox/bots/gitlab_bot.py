@@ -2,7 +2,7 @@ import os
 from urllib.parse import quote_plus
 
 from gitlab import Gitlab
-from gitlab.exceptions import GitlabAuthenticationError, GitlabGetError, GitlabCreateError
+from gitlab.exceptions import GitlabGetError, GitlabCreateError
 
 
 class GitLabBot:
@@ -18,11 +18,8 @@ class GitLabBot:
                 "This token is required to authenticate with the GitLab API."
             )
 
-        if not self.repository:
-            raise ValueError(
-                "GITLAB_REPOSITORY environment variable is not set. "
-                "Expected format: 'group/project' or 'group/subgroup/project'."
-            )
+        if not self.repository or not self.repository.isdigit():
+            raise ValueError(f"Invalid GITLAB_REPOSITORY: {self.repository!r}")
 
         if not self.mr_iid or not self.mr_iid.isdigit():
             raise ValueError(
@@ -42,7 +39,7 @@ class GitLabBot:
         project_path = quote_plus(self.repository)
 
         try:
-            project = self.gitlab.projects.get(project_path)
+            project = self.gitlab.projects.get(int(project_path))
             mr = project.mergerequests.get(int(self.mr_iid))
             mr.notes.create({"body": message})
         except GitlabGetError as exc:
