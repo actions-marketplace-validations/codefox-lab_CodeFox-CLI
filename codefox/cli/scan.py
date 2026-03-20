@@ -24,7 +24,7 @@ class Scan(BaseCLI):
         self.gitlab_bot = None
         if self.args.get("ci", False) and os.getenv("GITHUB_BOT"):
             self.github_bot = GitHubBot()
-        elif self.args("ci", False) and os.getenv("GITLAB_BOT"):
+        elif self.args.get("ci", False) and os.getenv("GITLAB_BOT"):
             self.gitlab_bot = GitLabBot()
 
     def execute(self) -> None:
