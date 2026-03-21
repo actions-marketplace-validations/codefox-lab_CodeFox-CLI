@@ -8,9 +8,9 @@ app = typer.Typer()
 
 @app.command("scan")
 def scan(
-    ci: bool = typer.Option(False, "--ci", help="CI mode"),
-    source_branch: str = typer.Option(None, help="Source branch"),
-    target_branch: str = typer.Option(None, help="Target branch"),
+    ci: bool = typer.Option(False, "--ci", help="CI mode."),
+    source_branch: str | None = typer.Option(None, help="Source branch."),
+    target_branch: str | None = typer.Option(None, help="Target branch."),
 ):
     """Run AI code review."""
     manager = CLIManager(
@@ -24,14 +24,32 @@ def scan(
     manager.run()
 
 
+@app.command("index")
+def index():
+    """Index files"""
+    CLIManager(command="index", args={}).run()
+
+
 @app.command("init")
-def init():
+def init(
+    provider: str | None = typer.Option(None, help="Provider."),
+    token: str | None = typer.Option(None, help="Token provider."),
+):
     """Initialize CodeFox."""
-    CLIManager(command="init", args={}).run()
+    manager = CLIManager(
+        command="init",
+        args={
+            "provider": provider,
+            "token": token,
+        },
+    )
+    manager.run()
 
 
 @app.command("list")
-def list_models(type_model: str = typer.Argument("models", help="Model type")):
+def list_models(
+    type_model: str = typer.Argument("models", help="Model type."),
+):
     """List available models."""
     manager = CLIManager(
         command="list",
@@ -43,7 +61,7 @@ def list_models(type_model: str = typer.Argument("models", help="Model type")):
 
 
 @app.command("clean")
-def clean(type_cache: str = typer.Argument("all", help="Cache type")):
+def clean(type_cache: str = typer.Argument("all", help="Cache type.")):
     """Clean cache"""
     manager = CLIManager(
         command="clean",
