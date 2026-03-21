@@ -1,15 +1,18 @@
 .vscode/
 .idea/
 .venv/
+.codefox/
 .*_cache/
-.env
+
+__pycache__/
+build/
+codefox.egg-info/
+
 .codefoxenv
 .codefoxignore
 .codefox.yml
+.env
 
 venv*/
-build/
-__pycache__/
+
 *.pyc
-.codefox/
-codefox.egg-info/
